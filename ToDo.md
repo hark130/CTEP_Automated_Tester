@@ -1,5 +1,5 @@
 ## CURRENTLY ##
-- [ ] Determine files present  
+- [X] Determine files present  
 - [ ] Compile source code into object code  
 - [ ] Link existing object code into a binary executable  
 - [ ] Execute the binary  
