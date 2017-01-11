@@ -3,7 +3,7 @@ This project is in support of the CTEP project.
 
 ## PURPOSE ##
 The current CTEP framework can not evaluate code submissions intended for the Windows OS.  This project will seek to:
-    * Discover necessary files
+    ** Discover necessary files
     * Assemble source code
     * Link object code to a binary
     * Run that binary
