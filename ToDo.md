@@ -7,4 +7,5 @@
     
 ## FUTURE ##
 - [ ] Dynamically determine version of Visual Studio  
+- [ ] Find fancy 'Windows' method of locating Visual Studio install path instead of hard-coding install directory
     
