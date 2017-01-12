@@ -7,6 +7,7 @@
 import os
 
 
+# 1. Determine files present  
 '''
     Purpose: Return a list of files that match fileExt and exist in the dir path
     Input:
@@ -73,3 +74,33 @@ def create_file_list(dir, fileExt):
                     break # Found a match.  Move on to the next file.
 
     return cflRetVal
+
+
+# 2. Compile source code into object code  
+def compile_source_to_object(dir, fileExt):
+    cstoRetVal = '' # Function return value
+
+    # 1. GET THE LIST OF FILES TO COMPILE
+    sourceFileList = create_file_list(dir, fileExt)
+
+    # 2. LOCATE THE MICROSOFT C/C++ COMPILER
+    cl_path = ''
+    msCompilerLocations = []
+    if os.path.exists(os.path.join('C:\Program Files (x86)','Microsoft Visual Studio 14.0','VC','bin','amd64','cl.exe')):
+        msCompilerLocation.append(os.path.join('C:\Program Files (x86)','Microsoft Visual Studio 14.0','VC','bin','amd64','cl.exe'))
+    if os.path.exists(os.path.join('C:\Program Files (x86)','Microsoft Visual Studio 14.0','VC','bin','amd64_x86','cl.exe')):
+        msCompilerLocation.append(os.path.join('C:\Program Files (x86)','Microsoft Visual Studio 14.0','VC','bin','amd64_x86','cl.exe'))
+    if os.path.exists(os.path.join('C:\Program Files (x86)','Microsoft Visual Studio 14.0','VC','bin','amd64_arm','cl.exe')):
+        msCompilerLocation.append(os.path.join('C:\Program Files (x86)','Microsoft Visual Studio 14.0','VC','bin','amd64_arm','cl.exe'))
+
+    if msCompilerLocations.__len__() == 0:
+        raise FileNotFoundError('cl.exe not found')
+    else:
+        cl_path = msCompilerLocations[0] # Assumed to be C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\amd64_x86\cl.exe
+
+    # 3. COMPILE SOME FILES
+    for sourceFile in sourceFileList:
+        os.system(cl_path + ' ' + 
+
+
+    return cstoRetVal    

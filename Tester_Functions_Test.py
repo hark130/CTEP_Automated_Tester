@@ -266,6 +266,12 @@ if __name__ == '__main__':
     for file in testFiles:
         if os.path.exists(file) is False:
             newFile = open(file,'w')
+
+            if file.find('.c') >= 0:
+                file.write('#include <stdio.h>\nint main(void)\n{\n\tputs("Hello world");\n\treturn 0\n;}')
+            elif file.find('.py') >= 0:
+                file.write('print("Hellow world")')
+
             newFile.close()
 
     unittest.main()
