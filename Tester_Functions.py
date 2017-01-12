@@ -85,7 +85,7 @@ def create_file_list(dir, fileExt):
             dir - a string representing the path in which to search for files
             fileExt - a string or list representation of file extensions to look for
     Ouput:
-            A list of object files files on success
+            A list of object files that were modified, on success
             An empty list if no matches were made
     Exceptions:
             TypeError if parameters don't match the expected types
@@ -200,3 +200,14 @@ def compile_source_to_object(dir, fileExt):
                             cstoRetVal.append(sourceFile) 
 
     return cstoRetVal    
+
+
+
+
+
+
+
+
+
+
+

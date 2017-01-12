@@ -489,6 +489,43 @@ class CompileSourceToObjectTests(unittest.TestCase):
                         print("Unable to remove .obj file:\t{}".format(existingFile))
                         print(repr(err))
    
+    def test_function_Test4(self):
+        # Remove any existing .obj files
+        for existingFile in os.listdir(os.path.join(os.getcwd(),'Tester_Function_Test_Files')):
+            if existingFile.find('.obj') == (existingFile.__len__() - '.obj'.__len__()):
+                try:
+                    os.remove(os.path.join(os.getcwd(),'Tester_Function_Test_Files', existingFile))
+                except Exception as err:
+                    print("Unable to remove .obj file:\t{}".format(existingFile))
+                    print(repr(err))
+
+        # Attempt to assemble .obj files
+        try:
+            result = compile_source_to_object(os.path.join(os.getcwd(),'Tester_Function_Test_Files'), '.abc')
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised an exception')
+        else:
+            # Verify return values
+            self.assertFalse(os.path.join(os.getcwd(),'Tester_Function_Test_Files', 'Test.obj') in result)
+            self.assertFalse(os.path.join(os.getcwd(),'Tester_Function_Test_Files', 'Hello_world.obj') in result)
+            self.assertFalse(os.path.join(os.getcwd(),'Tester_Function_Test_Files', 'Not_A_Source_File.obj') in result)
+            self.assertTrue(result.__len__() == 0)
+            
+            # Verify the status of .obj files
+            self.assertFalse(os.path.exists(os.path.join(os.getcwd(),'Tester_Function_Test_Files', 'Test.obj')))
+            self.assertFalse(os.path.exists(os.path.join(os.getcwd(),'Tester_Function_Test_Files', 'Hello_world.obj')))
+            # Not_A_Source_File.c should *NOT* assemble into an object file!
+            self.assertFalse(os.path.exists(os.path.join(os.getcwd(),'Tester_Function_Test_Files', 'Not_A_Source_File.obj'))) 
+        finally:
+            # CLEANUP - Remove any existing .obj files because we don't want them in the repository
+            for existingFile in os.listdir(os.path.join(os.getcwd(),'Tester_Function_Test_Files')):
+                if existingFile.find('.obj') == (existingFile.__len__() - '.obj'.__len__()):
+                    try:
+                        os.remove(os.path.join(os.getcwd(),'Tester_Function_Test_Files', existingFile))
+                    except Exception as err:
+                        print("Unable to remove .obj file:\t{}".format(existingFile))
+                        print(repr(err))
 
 if __name__ == '__main__':
     # Necessary test files (doesn't matter if they're empty, they merely need to exist)
