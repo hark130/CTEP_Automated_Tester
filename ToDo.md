@@ -8,4 +8,5 @@
 ## FUTURE ##
 - [ ] Dynamically determine version of Visual Studio  
 - [ ] Find fancy 'Windows' method of locating Visual Studio install path instead of hard-coding install directory
+- [ ] Investigate CMake as a generic method of compilation that is compiler-agnostic(?)
     
