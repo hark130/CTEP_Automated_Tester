@@ -65,7 +65,7 @@ def create_file_list(dir, fileExt):
                 break # Found a match. Stop looking.
 
     # 2. WALK DIR
-    print('\n') # DEBUGGING
+#    print('\n') # DEBUGGING
     for file in os.listdir(dir):
 #        print("File:\t{}\t{}".format(file,os.path.isfile(file))) # DEBUGGING
         if os.path.isfile(os.path.join(dir, file)) is True:
@@ -358,7 +358,7 @@ def link_objects_to_binary(dir, objFiles):
             except Exception as err:
                 print(repr(err))
             else:
-                print("\nLinked:\t{}".format(binaryFilename)) # DEBUGGING
+#                print("\nLinked:\t{}".format(binaryFilename)) # DEBUGGING
                 pass
 
             # 5. END THE PROCESS
