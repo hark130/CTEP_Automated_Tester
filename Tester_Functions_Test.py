@@ -2,6 +2,7 @@
 
 from Tester_Functions import create_file_list # create_file_list(dir, fileExt)
 from Tester_Functions import compile_source_to_object # compile_source_to_object(dir, fileExt)
+from Tester_Functions import link_objects_to_binary # link_objects_to_binary(dir, objFiles)
 import unittest
 import os
 
@@ -527,6 +528,140 @@ class CompileSourceToObjectTests(unittest.TestCase):
                         print("Unable to remove .obj file:\t{}".format(existingFile))
                         print(repr(err))
 
+class LinkObjectsToBinaryTests(unittest.TestCase):
+
+    def test_dir_TypeError1(self):
+        try:
+            link_objects_to_binary(42, ['some.obj', 'some_other.obj'])
+        except TypeError as err:
+            self.assertEqual(err.args[0], 'dir is not a string')
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+
+    def test_dir_TypeError2(self):
+        try:
+            link_objects_to_binary([os.getcwd(), os.path.dirname(os.getcwd())], 'some.obj')
+        except TypeError as err:
+            self.assertEqual(err.args[0], 'dir is not a string')
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+
+    def test_dir_ValueError1(self):
+        try:
+            link_objects_to_binary(os.path.join(os.getcwd(),'Nonexistent_Directory'), ['Doc.obj','Holiday.obj'])
+        except ValueError as err:
+            self.assertEqual(err.args[0], 'dir does not exist')
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+
+    def test_dir_ValueError2(self):
+        try:
+            link_objects_to_binary(os.path.join(os.getcwd(), 'Tester_Function_Test_Files', 'Test.c'), ['Doc.obj','Holiday.obj'])
+        except ValueError as err:
+            self.assertEqual(err.args[0], 'dir is not a directory')
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+
+    def test_fileExt_TypeError1(self):
+        try:
+            link_objects_to_binary(os.path.join(os.getcwd(),'Tester_Function_Test_Files'), {1:'1',2:'2',3:'3'})
+        except TypeError as err:
+            self.assertEqual(err.args[0], 'objFiles is not a string or a list')
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+
+    def test_fileExt_TypeError2(self):
+        try:
+            link_objects_to_binary(os.path.join(os.getcwd(),'Tester_Function_Test_Files'), 3.14)
+        except TypeError as err:
+            self.assertEqual(err.args[0], 'objFiles is not a string or a list')
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+
+    def test_fileExt_ValueError1(self):
+        try:
+            link_objects_to_binary(os.path.join(os.getcwd(),'Tester_Function_Test_Files'), ['some.obj','some_other.obj', 1337])
+        except ValueError as err:
+            self.assertEqual(err.args[0], 'objFiles contains a non string')
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+
+    def test_fileExt_ValueError2(self):
+        try:
+            link_objects_to_binary(os.path.join(os.getcwd(),'Tester_Function_Test_Files'), [2,3,5,7,11,13])
+        except ValueError as err:
+            self.assertEqual(err.args[0], 'objFiles contains a non string')
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+
+    def test_function_Test0(self):
+        testPath = os.path.join(os.getcwd(),'Tester_Function_Test_Files','Linker_Test0')
+        testFiles = create_file_list(testPath, '.obj') # A bit incestuous but it's a useful function
+        testBinary = os.path.join(os.getcwd(),'Tester_Function_Test_Files','Linker_Test0', 'Linker_Test0-8.exe')
+        testFilenamePrepend = 'Linker_Test0-'
+
+        try:
+            result = link_objects_to_binary(testPath, testFiles)
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised an exception')
+        else:
+            self.assertTrue(isinstance(result, str)) # Return value should be a string
+            self.assertTrue(result.__len__() > 0) # We're expecting something
+            self.assertTrue(os.path.exists(result)) # The function claims it made a binary so it should exist
+            self.assertTrue(os.path.isfile(result)) # The function claims it made a binary so it should be a file
+            self.assertTrue(os.path.exists(testBinary)) # We're expecting to see this binary
+            self.assertTrue(os.path.isfile(testBinary)) # We're expecting to see this binary as a file
+        finally:
+            checkNextFile = False # Global continue
+            # Cleanup any stray binaries of the Linker_Test0-8.exe, Linker_Test0-9.exe, etc variety
+            for file in os.listdir(testPath):
+                checkNextFile = False # Reset the global continue
+                if file.find(testFilenamePrepend) == 0:
+                    # Remove prepended filename
+                    trimmedFile = file[file.find(testFilenamePrepend) + testFilenamePrepend.__len__():]
+                    
+                    if trimmedFile.find('.exe') >= 0:
+                        trimmedFile = trimmedFile[:trimmedFile.find('.exe')]
+
+                        for char in trimmedFile:
+                            if char.isdigit() is False:
+#                                os.remove(os.path.join(testPath,file))
+                                checkNextFile = True
+                                break # This filename has words.  It's part of the test.
+
+                        if checkNextFile == True:
+                            continue
+                        # Made it through without any non-numbers
+                        elif int(trimmedFile) >= 8:
+                            os.remove(os.path.join(testPath,file))
+
+            if os.path.exists(testBinary) is True and os.path.isfile(testBinary):
+                os.remove(testBinary)
+
+    def test_function_Test1(self):
+        testPath = os.path.join(os.getcwd(),'Tester_Function_Test_Files','Linker_Test1')
+        testFiles = create_file_list(testPath, '.obj') # A bit incestuous but it's a useful function
+
+        try:
+            result = link_objects_to_binary(testPath, testFiles)
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised an exception')
+        else:
+            self.assertTrue(isinstance(result, str))
+            self.assertTrue(result.__len__() > 0)
+            self.assertTrue(os.path.exists(result))
+            self.assertTrue(os.path.isfile(result))
+
 if __name__ == '__main__':
     # Necessary test files (doesn't matter if they're empty, they merely need to exist)
     testFiles = []
@@ -555,7 +690,13 @@ if __name__ == '__main__':
 
             newFile.close()
 
-    unittest.main()
+    # CompileSourceToObjectTests class tests take too long
+    # Change Tester_Functions_Test.py back to unittest.main() prior to final commit/push
+    #unittest.main(verbosity=2) 
+
+    linkerSuite = unittest.TestLoader().loadTestsFromTestCase(LinkObjectsToBinaryTests)
+    unittest.TextTestRunner(verbosity=2).run(linkerSuite)
+
     print("Done Testing")
 
 
