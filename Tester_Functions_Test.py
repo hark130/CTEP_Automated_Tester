@@ -856,6 +856,218 @@ class LinkObjectsToBinaryTests(unittest.TestCase):
             if os.path.exists(testBinary) is True and os.path.isfile(testBinary):
                 os.remove(testBinary)
 
+#   Test 5 - link_objects_to_binary()
+#       - Test the ability of the linker to link an .obj file outside of this directory (see: Instructor Unit Tests)
+#       - Tests the ability to increment an executable number from four digits to five (9999 to 10000)
+#       - Tests the ability to ignore .obj files that exist but weren't included
+    def test_function_Test5(self):
+        testDir = 'Linker_Test5'
+        testFilenamePrepend = testDir + '-'
+        expectedBinaryNumber = '10000'
+        testPath = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testDir)
+#        testFiles = create_file_list(testPath, '.obj') # A bit incestuous but it's a useful function
+        # Leave out all other .obj files... namely Do_Not_Link_This.obj
+        testFiles = [os.path.join(testPath, 'main.obj'), os.path.join(testPath, 'myHeader.obj'), os.path.join(os.getcwd(), 'Tester_Function_Test_Files', 'Linker_Test4', 'myOtherHeader.obj')]
+        testBinary = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testDir, testFilenamePrepend + expectedBinaryNumber + '.exe')
+
+        try:
+            result = link_objects_to_binary(testPath, testFiles)
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised an exception')
+        else:
+            self.assertTrue(isinstance(result, str)) # Return value should be a string
+            self.assertTrue(result.__len__() > 0) # We're expecting something
+            self.assertTrue(os.path.exists(result)) # The function claims it made a binary so it should exist
+            self.assertTrue(os.path.isfile(result)) # The function claims it made a binary so it should be a file
+            self.assertTrue(os.path.exists(testBinary)) # We're expecting to see this binary
+            self.assertTrue(os.path.isfile(testBinary)) # We're expecting to see this binary as a file
+        finally:
+            checkNextFile = False # Global continue
+            # Cleanup any stray binaries of the Linker_Test0-8.exe, Linker_Test0-9.exe, etc variety
+            for file in os.listdir(testPath):
+                checkNextFile = False # Reset the global continue
+                if file.find(testFilenamePrepend) == 0:
+                    # Remove prepended filename
+                    trimmedFile = file[file.find(testFilenamePrepend) + testFilenamePrepend.__len__():]
+                    
+                    if trimmedFile.find('.exe') >= 0:
+                        trimmedFile = trimmedFile[:trimmedFile.find('.exe')]
+
+                        for char in trimmedFile:
+                            if char.isdigit() is False:
+#                                os.remove(os.path.join(testPath,file))
+                                checkNextFile = True
+                                break # This filename has words.  It's part of the test.
+
+                        if checkNextFile == True:
+                            continue
+                        # Made it through without any non-numbers
+                        elif int(trimmedFile) >= int(expectedBinaryNumber):
+                            os.remove(os.path.join(testPath,file))
+
+            if os.path.exists(testBinary) is True and os.path.isfile(testBinary):
+                os.remove(testBinary)
+
+#   Test 6 - link_objects_to_binary()
+#       - Test the ability to realize the linking failed (missing a necessary .obj to a header)
+#       - Test the return value on a failed binary creation
+    def test_function_Test6(self):
+        testDir = 'Linker_Test6'
+        testFilenamePrepend = testDir + '-'
+        expectedBinaryNumber = '1'
+        testPath = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testDir)
+#        testFiles = create_file_list(testPath, '.obj') # A bit incestuous but it's a useful function
+        # Leave out all other .obj files... namely Do_Not_Link_This.obj
+        testFiles = [os.path.join(testPath, 'main.obj'), os.path.join(testPath, 'myHeader.obj')]
+        testBinary = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testDir, testFilenamePrepend + expectedBinaryNumber + '.exe')
+
+        try:
+            result = link_objects_to_binary(testPath, testFiles)
+        except RuntimeError as err:
+            self.assertEqual(err.args[0], 'Linker did not create the binary')
+            self.assertFalse(os.path.exists(testBinary)) # The function should not have made a binary so it should NOT exist
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+        else:
+            self.assertTrue(isinstance(result, str)) # Return value should be a string
+            self.assertTrue(result.__len__() > 0) # We're expecting something
+            self.assertFalse(os.path.exists(result)) # The function should not have made a binary so it should NOT exist
+            self.assertFalse(os.path.exists(testBinary)) # The function should not have made a binary so it should NOT exist
+        finally:
+            checkNextFile = False # Global continue
+            # Cleanup any stray binaries of the Linker_Test0-8.exe, Linker_Test0-9.exe, etc variety
+            for file in os.listdir(testPath):
+                checkNextFile = False # Reset the global continue
+                if file.find(testFilenamePrepend) == 0:
+                    # Remove prepended filename
+                    trimmedFile = file[file.find(testFilenamePrepend) + testFilenamePrepend.__len__():]
+                    
+                    if trimmedFile.find('.exe') >= 0:
+                        trimmedFile = trimmedFile[:trimmedFile.find('.exe')]
+
+                        for char in trimmedFile:
+                            if char.isdigit() is False:
+#                                os.remove(os.path.join(testPath,file))
+                                checkNextFile = True
+                                break # This filename has words.  It's part of the test.
+
+                        if checkNextFile == True:
+                            continue
+                        # Made it through without any non-numbers
+                        elif int(trimmedFile) >= int(expectedBinaryNumber):
+                            os.remove(os.path.join(testPath,file))
+
+            if os.path.exists(testBinary) is True and os.path.isfile(testBinary):
+                os.remove(testBinary)
+
+#   Test 7 - link_objects_to_binary()
+#       - Test the ability to realize the linking failed (missing all necessary .obj files for the headers)
+#       - Test the return value on a failed binary creation
+    def test_function_Test7(self):
+        testDir = 'Linker_Test7'
+        testFilenamePrepend = testDir + '-'
+        expectedBinaryNumber = '1'
+        testPath = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testDir)
+#        testFiles = create_file_list(testPath, '.obj') # A bit incestuous but it's a useful function
+        # Leave out all other .obj files... namely Do_Not_Link_This.obj
+        testFiles = [os.path.join(testPath, 'main.obj')]
+        testBinary = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testDir, testFilenamePrepend + expectedBinaryNumber + '.exe')
+
+        try:
+            result = link_objects_to_binary(testPath, testFiles)
+        except RuntimeError as err:
+            self.assertEqual(err.args[0], 'Linker did not create the binary')
+            self.assertFalse(os.path.exists(testBinary)) # The function should not have made a binary so it should NOT exist
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+        else:
+            self.assertTrue(isinstance(result, str)) # Return value should be a string
+            self.assertTrue(result.__len__() > 0) # We're expecting something
+            self.assertFalse(os.path.exists(result)) # The function should not have made a binary so it should NOT exist
+            self.assertFalse(os.path.exists(testBinary)) # The function should not have made a binary so it should NOT exist
+        finally:
+            checkNextFile = False # Global continue
+            # Cleanup any stray binaries of the Linker_Test0-8.exe, Linker_Test0-9.exe, etc variety
+            for file in os.listdir(testPath):
+                checkNextFile = False # Reset the global continue
+                if file.find(testFilenamePrepend) == 0:
+                    # Remove prepended filename
+                    trimmedFile = file[file.find(testFilenamePrepend) + testFilenamePrepend.__len__():]
+                    
+                    if trimmedFile.find('.exe') >= 0:
+                        trimmedFile = trimmedFile[:trimmedFile.find('.exe')]
+
+                        for char in trimmedFile:
+                            if char.isdigit() is False:
+#                                os.remove(os.path.join(testPath,file))
+                                checkNextFile = True
+                                break # This filename has words.  It's part of the test.
+
+                        if checkNextFile == True:
+                            continue
+                        # Made it through without any non-numbers
+                        elif int(trimmedFile) >= int(expectedBinaryNumber):
+                            os.remove(os.path.join(testPath,file))
+
+            if os.path.exists(testBinary) is True and os.path.isfile(testBinary):
+                os.remove(testBinary)
+
+#   Test 8 - link_objects_to_binary()
+#       - Test the ability to realize the linking failed (missing the main() .obj file)
+#       - Test the return value on a failed binary creation
+    def test_function_Test8(self):
+        testDir = 'Linker_Test8'
+        testFilenamePrepend = testDir + '-'
+        expectedBinaryNumber = '3'
+        testPath = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testDir)
+#        testFiles = create_file_list(testPath, '.obj') # A bit incestuous but it's a useful function
+        # Leave out all other .obj files... namely Do_Not_Link_This.obj
+        testFiles = [os.path.join(testPath, 'myHeader.obj'), os.path.join(testPath, 'myOtherHeader.obj')]
+        testBinary = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testDir, testFilenamePrepend + expectedBinaryNumber + '.exe')
+
+        try:
+            result = link_objects_to_binary(testPath, testFiles)
+        except RuntimeError as err:
+            self.assertEqual(err.args[0], 'Linker did not create the binary')
+            self.assertFalse(os.path.exists(testBinary)) # The function should not have made a binary so it should NOT exist
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+        else:
+            self.assertTrue(isinstance(result, str)) # Return value should be a string
+            self.assertTrue(result.__len__() > 0) # We're expecting something
+            self.assertFalse(os.path.exists(result)) # The function should not have made a binary so it should NOT exist
+            self.assertFalse(os.path.exists(testBinary)) # The function should not have made a binary so it should NOT exist
+        finally:
+            checkNextFile = False # Global continue
+            # Cleanup any stray binaries of the Linker_Test0-8.exe, Linker_Test0-9.exe, etc variety
+            for file in os.listdir(testPath):
+                checkNextFile = False # Reset the global continue
+                if file.find(testFilenamePrepend) == 0:
+                    # Remove prepended filename
+                    trimmedFile = file[file.find(testFilenamePrepend) + testFilenamePrepend.__len__():]
+                    
+                    if trimmedFile.find('.exe') >= 0:
+                        trimmedFile = trimmedFile[:trimmedFile.find('.exe')]
+
+                        for char in trimmedFile:
+                            if char.isdigit() is False:
+#                                os.remove(os.path.join(testPath,file))
+                                checkNextFile = True
+                                break # This filename has words.  It's part of the test.
+
+                        if checkNextFile == True:
+                            continue
+                        # Made it through without any non-numbers
+                        elif int(trimmedFile) >= int(expectedBinaryNumber):
+                            os.remove(os.path.join(testPath,file))
+
+            if os.path.exists(testBinary) is True and os.path.isfile(testBinary):
+                os.remove(testBinary)
+
 if __name__ == '__main__':
     # Necessary test files (doesn't matter if they're empty, they merely need to exist)
     testFiles = []
@@ -886,10 +1098,10 @@ if __name__ == '__main__':
 
     # CompileSourceToObjectTests class tests take too long
     # Change Tester_Functions_Test.py back to unittest.main() prior to final commit/push
-    #unittest.main(verbosity=2) 
+    unittest.main(verbosity=2) 
 
-    linkerSuite = unittest.TestLoader().loadTestsFromTestCase(LinkObjectsToBinaryTests)
-    unittest.TextTestRunner(verbosity=2).run(linkerSuite)
+#    linkerSuite = unittest.TestLoader().loadTestsFromTestCase(LinkObjectsToBinaryTests)
+#    unittest.TextTestRunner(verbosity=2).run(linkerSuite)
 
     print("Done Testing")
 

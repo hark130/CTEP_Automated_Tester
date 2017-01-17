@@ -214,6 +214,7 @@ def compile_source_to_object(dir, fileExt):
             TypeError if parameters don't match the expected types
             ValueError if dir does not exist
             ValueError if one of the entries in objFiles is missing
+            RuntimeError if the intended binary was not created
     NOTE:
             BINARY NAME:
                 The prepend name of the binary will be the name of the containing directory
@@ -377,6 +378,13 @@ def link_objects_to_binary(dir, objFiles):
 #                print("The Process Has Ended") # DEBUGGING
                 ## 5.3. Get the absolute filename of the newly linked binary
                 lotbRetVal = os.path.join(dir, binaryFilename)
+
+    # 6. VERIFY BINARY IS PRESENT
+    if lotbRetVal.__len__() > 0:
+        if os.path.exists(lotbRetVal) is False or os.path.isfile(lotbRetVal) is False:
+            raise RuntimeError('Linker did not create the binary')
+    else:
+        raise RuntimeError('Linker command was not executed')
 
     return lotbRetVal
 
