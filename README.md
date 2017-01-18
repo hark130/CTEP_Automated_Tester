@@ -5,7 +5,7 @@ This project is in support of the CTEP project.
 The current CTEP framework can not evaluate code submissions intended for the Windows OS.  This project will seek to:
 - [X] Discover necessary files  
 - [X] Assemble source code  
-- [x] Link object code to a binary  
+- [X] Link object code to a binary  
 - [ ] Run that binary  
 - [ ] Save the output of the binary into a file  
     
