@@ -1,0 +1,11 @@
+Microsoft Windows [Version 6.1.7601]
+Copyright (c) 2009 Microsoft Corporation.  All rights reserved.
+
+C:\Users\atorres\documents\Official\KSA_Project\Repositories\Automated_Tester>"C:\Users\atorres\documents\Official\KSA_Project\Repositories\Automated_Tester\Tester_Function_Test_Files\Binary_Test3\Binary_Test3.exe"
+My String:	This is my string!
+Upper String:	THIS IS MY STRING!
+Lower String:	this is my string!
+Fixed String:	This is my string!
+
+C:\Users\atorres\documents\Official\KSA_Project\Repositories\Automated_Tester>
+C:\Users\atorres\documents\Official\KSA_Project\Repositories\Automated_Tester>

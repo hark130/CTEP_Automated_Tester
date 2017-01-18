@@ -1,0 +1,4 @@
+My String:	This is my string!
+Upper String:	THIS IS MY STRING!
+Lower String:	this is my string!
+Fixed String:	This is my string!

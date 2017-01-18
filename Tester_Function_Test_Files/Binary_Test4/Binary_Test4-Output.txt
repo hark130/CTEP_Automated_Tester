@@ -1,0 +1,3 @@
+Don't look in  here.
+This isn't the output file you should be looking at.
+Proper execution should be naming another file "Binary_Test3-Output-YYYYMMDD-HHMMSS.txt"
