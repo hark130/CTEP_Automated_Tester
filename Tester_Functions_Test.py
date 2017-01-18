@@ -1604,10 +1604,10 @@ if __name__ == '__main__':
 
     # CompileSourceToObjectTests class tests take too long
     # Change Tester_Functions_Test.py back to unittest.main() prior to final commit/push
-#    unittest.main(verbosity=2) 
+    unittest.main(verbosity=2) 
 
-    linkerSuite = unittest.TestLoader().loadTestsFromTestCase(ExecuteThisBinary)
-    unittest.TextTestRunner(verbosity=2).run(linkerSuite)
+#    linkerSuite = unittest.TestLoader().loadTestsFromTestCase(ExecuteThisBinary)
+#    unittest.TextTestRunner(verbosity=2).run(linkerSuite)
 
     print("Done Testing")
 
