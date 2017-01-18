@@ -3,8 +3,10 @@
 from Tester_Functions import create_file_list # create_file_list(dir, fileExt)
 from Tester_Functions import compile_source_to_object # compile_source_to_object(dir, fileExt)
 from Tester_Functions import link_objects_to_binary # link_objects_to_binary(dir, objFiles)
+from Tester_Functions import execute_this_binary # execute_this_binary(absExeFilename, absOutputFilename='')
 import unittest
 import os
+import filecmp
 
 class CreateFileListTests(unittest.TestCase):
 
@@ -1068,6 +1070,169 @@ class LinkObjectsToBinaryTests(unittest.TestCase):
             if os.path.exists(testBinary) is True and os.path.isfile(testBinary):
                 os.remove(testBinary)
 
+class ExecuteThisBinary(unittest.TestCase):
+
+#   Test 1 - execute_this_binary() 
+#       - Non-string as absExeFilename 
+#       - Missing absOutputFilename 
+    def test1_absExeFilename_TypeError1(self):
+        testInputBinary = 42
+
+        try:
+            execute_this_binary(testInputBinary)
+        except TypeError as err:
+            self.assertEqual(err.args[0], 'absExeFilename is not a string')
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+
+#   Test 2 - execute_this_binary() 
+#       - Blank string as absExeFilename 
+    def test2_absExeFilename_ValueError1(self):
+        testInputBinary = ''
+        testOutputFile = os.path.join(os.getcwd(), 'Test2-ValueError1.txt')
+
+        try:
+            execute_this_binary(testInputBinary, testOutputFile)
+        except ValueError as err:
+            self.assertEqual(err.args[0], 'absExeFilename is empty')
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+        finally:
+            self.assertFalse(os.path.exists(testOutputFile))
+            
+            # Clean up
+            if os.path.exists(testOutputFile) is True and os.path.isfile(testOutputFile) is True:
+                os.remove(testOutputFile)
+
+#   Test 3 - execute_this_binary() 
+#       - Nonexistent binary as absExeFilename 
+    def test3_absExeFilename_ValueError2(self):
+        testInputBinary = os.path.join(os.getcwd(), 'Good_Luck_Finding_This_Binary.exe')
+        testOutputFile = os.path.join(os.getcwd(), 'Test3-ValueError3.txt')
+
+        try:
+            execute_this_binary(testInputBinary, testOutputFile)
+        except ValueError as err:
+            self.assertEqual(err.args[0], 'absExeFilename does not exist')
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+        finally:
+            self.assertFalse(os.path.exists(testOutputFile))
+
+            # Clean up
+            if os.path.exists(testOutputFile) is True and os.path.isfile(testOutputFile) is True:
+                os.remove(testOutputFile)
+
+#   Test 4 - execute_this_binary() 
+#       - Directory as absExeFilename 
+    def test4_absExeFilename_ValueError3(self):
+        testInputBinary = os.path.join(os.getcwd())
+        testOutputFile = os.path.join(os.getcwd(), 'Test4-ValueError3.txt')
+
+        try:
+            execute_this_binary(testInputBinary, testOutputFile)
+        except ValueError as err:
+            self.assertEqual(err.args[0], 'absExeFilename is not a file')
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+        finally:
+            self.assertFalse(os.path.exists(testOutputFile))
+
+            # Clean up
+            if os.path.exists(testOutputFile) is True and os.path.isfile(testOutputFile) is True:
+                os.remove(testOutputFile)
+
+#   Test 5 - execute_this_binary() 
+#       - Directory as absExeFilename 
+    def test5_absExeFilename_ValueError4(self):
+        testInputBinary = os.path.join(os.getcwd())
+        testOutputFile = os.path.join(os.getcwd(), 'Test5-ValueError4.txt')
+
+        try:
+            execute_this_binary(testInputBinary, testOutputFile)
+        except ValueError as err:
+            self.assertEqual(err.args[0], 'absExeFilename is not a file')
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+        finally:
+            self.assertFalse(os.path.exists(testOutputFile))
+
+            # Clean up
+            if os.path.exists(testOutputFile) is True and os.path.isfile(testOutputFile) is True:
+                os.remove(testOutputFile)
+
+#   Test 6 - execute_this_binary() 
+#       - Text file as absExeFilename 
+    def test6_absExeFilename_ValueError5(self):
+        testInputBinary = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', 'This_is_a_text_file.txt')
+        testOutputFile = os.path.join(os.getcwd(), 'Test6-ValueError5.txt')
+
+        try:
+            execute_this_binary(testInputBinary, testOutputFile)
+        except ValueError as err:
+            self.assertEqual(err.args[0], 'absExeFilename is not named properly')
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+        finally:
+            self.assertFalse(os.path.exists(testOutputFile))
+
+            # Clean up
+            if os.path.exists(testOutputFile) is True and os.path.isfile(testOutputFile) is True:
+                os.remove(testOutputFile)
+
+#   Test 7 - execute_this_binary() 
+#       - List as absOutputFilename
+    def test7_absOutputFilename_TypeError1(self):
+        testInputBinary = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', 'Linker_Test8', 'Linker_Test8-1.exe')
+        testOutputFileBAD = [os.getcwd(), 'Test7-TypeError1.txt']
+        testOutputFile = os.path.join(os.getcwd(), 'Test7-TypeError1.txt')
+
+        try:
+            execute_this_binary(testInputBinary, testOutputFileBAD)
+        except TypeError as err:
+            self.assertEqual(err.args[0], 'absOutputFilename is not a string')
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised the wrong exception')
+        finally:
+            self.assertFalse(os.path.exists(testOutputFile))
+
+            # Clean up
+            if os.path.exists(testOutputFile) is True and os.path.isfile(testOutputFile) is True:
+                os.remove(testOutputFile)
+
+#   Test 8 - execute_this_binary() 
+#       - Standard input
+    def test8_function_Test1(self):
+        testName = 'Binary_Test1'
+        testInputBinary = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '.exe')
+        testOutputFile = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '-Output.txt')
+        expectedOutputFile = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '-Expected_Output.txt')
+
+        try:
+            self.assertFalse(os.path.exists(testOutputFile)) # Ensure it exists
+            result = execute_this_binary(testInputBinary, testOutputFile)
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised an exception')
+        else:
+            self.assertTrue(os.path.exists(testOutputFile)) # Ensure it exists
+            self.assertTrue(os.path.isfile(testOutputFile)) # Ensure it is a file
+            self.assertTrue(result == testOutputFile) # Ensure the result is as expected
+            self.assertTrue(filecmp.cmp(testOutputFile, expectedOutputFile, shallow=True)) # Compare the resuls with expected results
+
+            # Clean up
+            if os.path.exists(testOutputFile) is True and os.path.isfile(testOutputFile) is True:
+                os.remove(testOutputFile)
+
+            filecmp.clear_cache() # Remove file comparisons... no desire to store them during testing.
+
 if __name__ == '__main__':
     # Necessary test files (doesn't matter if they're empty, they merely need to exist)
     testFiles = []
@@ -1098,10 +1263,10 @@ if __name__ == '__main__':
 
     # CompileSourceToObjectTests class tests take too long
     # Change Tester_Functions_Test.py back to unittest.main() prior to final commit/push
-    unittest.main(verbosity=2) 
+#    unittest.main(verbosity=2) 
 
-#    linkerSuite = unittest.TestLoader().loadTestsFromTestCase(LinkObjectsToBinaryTests)
-#    unittest.TextTestRunner(verbosity=2).run(linkerSuite)
+    linkerSuite = unittest.TestLoader().loadTestsFromTestCase(ExecuteThisBinary)
+    unittest.TextTestRunner(verbosity=2).run(linkerSuite)
 
     print("Done Testing")
 

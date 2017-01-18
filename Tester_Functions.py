@@ -1,12 +1,13 @@
 # 1. [X] Determine files present  
 # 2. [X] Compile source code into object code  
-# 3. [ ] Link existing object code into a binary executable  
+# 3. [X] Link existing object code into a binary executable  
 # 4. [ ] Execute the binary  
 # 5. [ ] Save the output of the execution into a file  
 
 import os
 import subprocess
 from time import sleep
+from datetime import datetime
 
 
 # 1. Determine files present  
@@ -388,5 +389,121 @@ def link_objects_to_binary(dir, objFiles):
 
     return lotbRetVal
 
+
+'''
+    Purpose: Run a given binary, capture the binary's output, and store the output into a file
+    Input:
+            absExeFilename - a string representing the absolute path of the binary to execute
+            absOutputFilename - a string representing the intended absolute path of the log file
+    Ouput:
+            A string representation of the *actual* log file's absolute filename, on success
+            An empty string on failure (in lieu of exceptions)
+    Exceptions:
+            TypeError if parameters don't match the expected types
+            ValueError if absExeFilename does not exist
+    NOTE:
+            If absOutputFilename is blank or ".", file "<ExeFilename>-Output-YYYYMMDD-HHMMSS" will be saved in
+                the current working directory.  Example: execute_this_binary("C:\\Users\\hark\\Documents\\Test.exe")
+                will save the output in "C:\\Users\\hark\\Documents\\Test-Output-20170117-152755.txt".
+            All absOutFilenames will be saved as .txt files.  Any existing file extensions will be stripped.
+            If absOutputFilename exists, a timestamp (-YYYYMMDD-HHMMSS) will be added to the filename
+            Return value is not guaranteed to match absOutputFilename! (this is to preserve existing log files)
+'''
+# 4. Execute the binary
+def execute_this_binary(absExeFilename, absOutputFilename=''):
+    ebRetVal = absOutputFilename # Variable to hold the functions return value (see: output file)
+    addTimestamp = False # Does ebRetVal require a timestamp?  Default, no.
+    createOutputFilename = False # Was absOutputFilename blank?  If so, create a filename.  Default, no.
+    bareBinaryName = '' # Stores the name of the executable without path or file extension
+    dateTimeStamp = '' # Will store the date-time stamp if necessary (format: YYYYMMDD-HHMMSS)
+
+    # 1. INPUT VALIDATION
+    ## 1.1. absExeFilename
+    ### 1.1.1. Verify absExeFilename is a string
+    if isinstance(absExeFilename, str) is False:
+        raise TypeError('absExeFilename is not a string')
+    ### 1.1.2. Verify absExeFilename is not blank
+    elif absExeFilename.__len__() == 0:
+        raise ValueError('absExeFilename is empty')
+    ### 1.1.3. Verify absExeFilename exists
+    elif os.path.exists(absExeFilename) is False:
+        raise ValueError('absExeFilename does not exist')
+    ### 1.1.4. Verify absExeFilename is a file
+    elif os.path.isfile(absExeFilename) is False:
+        raise ValueError('absExeFilename is not a file')
+    ### 1.1.5. Verify absExeFilename ends in .exe
+    elif absExeFilename.find('.exe') != (absExeFilename.__len__() - '.exe'.__len__()):
+        raise ValueError('absExeFilename is not named properly')  
+
+    ## 1.2. absOutputFilename
+    ### 1.2.1. Verify absOutputFilename is a string
+    if isinstance(absOutputFilename, str) is False:
+        raise TypeError('absOutputFilename is not a string')
+    ### 1.2.2. Check for absOutputFilename content
+    elif absOutputFilename.__len__() == 0 or absOutputFilename == '.':
+        createOutputFilename = True
+        addTimestamp = True
+        ebRetVal = os.getcwd()
+    ### 1.2.3. Check if absOutputFilename already exists
+    elif os.path.exists(absOutputFilename) is True:
+        if os.path.isfile(absOutputFilename) is True:
+            addTimestamp = True
+        else:
+            raise ValueError('absOutputFilename is not a file')
+
+
+
+    # N. CREATE DATE-TIME STAMP
+    if addTimestamp is True:
+        ## N.1.1. Get today's date time
+        rightNow = datetime.now()
+
+        ## N.1.2. Parse today's date time into dateTimeStamp
+        dateTimeStamp = rightNow.strftime("%Y%m%d") + '-' + rightNow.strftime("%H%M%S")
+
+        print("Date Stamp:\t{}".format(dateTimeStamp)) # DEBUGGING
+
+    # O. CREATE OUTPUT FILENAME
+    ## O.1. Get the binary name
+    ### O.1.1. Split the absolute filename
+    bareBinaryName = absExeFilename.split('\\')
+
+    ### O.1.2. Get the name of the binary
+    bareBinaryName = bareBinaryName[bareBinaryName.__len__() - 1]
+
+    ### O.1.3. Strip the file extension
+    if bareBinaryName.find('.') > 0:
+        bareBinaryName = bareBinaryName[:bareBinaryName.find('.')]
+
+    ## O.2. Create output filename
+    if createOutputFilename is True:
+        ### O.2.1. Prepend
+        ebRetVal = os.path.join(os.getcwd(), bareBinaryName + '-Output')
+        ### O.2.2. Add dateTimeStamp if it exists (and it should)
+        if dateTimeStamp.__len__() == 15:
+            ebRetVal = ebRetVal + '-' + dateTimeStamp
+        ### O.2.3. Add file extension
+        ebRetVal = ebRetVal + '.txt'
+    ## O.3. Check if a timestamp is called for
+    else:
+        if addTimestamp is True and dateTimeStamp.__len__() == 15:
+            ### O.3.1. Split the absolute output filename
+            absOutputFilenameList = absOutputFilename.split('\\')
+
+            ### O.3.2. Remove the file extension
+            outputFilename = absOutputFilenameList[absOutputFilenameList.__len__() - 1]
+            if outputFilename.find('.') > 0:
+                outputFilename = outputFilename[:outputFilename.find('.')]
+            absOutputFilenameList[absOutputFilenameList.__len__() - 1] = outputFilename
+
+            ### O.3.3. Change the name of the file by appending the dateTimeStamp
+            absOutputFilenameList[absOutputFilenameList.__len__() - 1] = absOutputFilenameList[absOutputFilenameList.__len__() - 1] + '-' + dateTimeStamp + '.txt'
+
+            ### O.3.4. Put it all back together again
+            ebRetVal = '\\'.join(absOutputFilenameList)
+
+
+
+    return ebRetVal
 
 
