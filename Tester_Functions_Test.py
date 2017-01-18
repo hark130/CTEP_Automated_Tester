@@ -4,9 +4,12 @@ from Tester_Functions import create_file_list # create_file_list(dir, fileExt)
 from Tester_Functions import compile_source_to_object # compile_source_to_object(dir, fileExt)
 from Tester_Functions import link_objects_to_binary # link_objects_to_binary(dir, objFiles)
 from Tester_Functions import execute_this_binary # execute_this_binary(absExeFilename, absOutputFilename='')
+from datetime import datetime # Used to compare times of files with expected times
 import unittest
 import os
 import filecmp
+
+MAX_SECONDS_TO_PROCESS = 60 # Maximum number of seconds necessary to allow from function call to filename datetime stamp creation
 
 class CreateFileListTests(unittest.TestCase):
 
@@ -1216,7 +1219,8 @@ class ExecuteThisBinary(unittest.TestCase):
         expectedOutputFile = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '-Expected_Output.txt')
 
         try:
-            self.assertFalse(os.path.exists(testOutputFile)) # Ensure it exists
+            self.assertFalse(os.path.exists(testOutputFile)) # Ensure it doesn't already exist
+            self.assertTrue(os.path.exists(expectedOutputFile)) # Ensure it exists
             result = execute_this_binary(testInputBinary, testOutputFile)
         except Exception as err:
             print(repr(err))
@@ -1225,13 +1229,350 @@ class ExecuteThisBinary(unittest.TestCase):
             self.assertTrue(os.path.exists(testOutputFile)) # Ensure it exists
             self.assertTrue(os.path.isfile(testOutputFile)) # Ensure it is a file
             self.assertTrue(result == testOutputFile) # Ensure the result is as expected
-            self.assertTrue(filecmp.cmp(testOutputFile, expectedOutputFile, shallow=True)) # Compare the resuls with expected results
-
+            # Test the file contents of testOutputFile against the contents of expectedOutputFile
+            ## Read the function output
+            with open(testOutputFile, 'r') as fileToTest:
+                testResults = fileToTest.read()
+            ## Read the expected output
+            with open(expectedOutputFile, 'r') as expectedFile:
+                expectedResults = expectedFile.read()
+            ## Verify that the function output contains the expected output (at the very least)
+            self.assertTrue(testResults.find(expectedResults) >= 0)
+        finally:
             # Clean up
             if os.path.exists(testOutputFile) is True and os.path.isfile(testOutputFile) is True:
                 os.remove(testOutputFile)
 
-            filecmp.clear_cache() # Remove file comparisons... no desire to store them during testing.
+#   Test 9 - execute_this_binary() 
+#       - Standard input but expects execute_this_binary() to add the .txt file extension to the desired output filename
+    def test9_function_Test2(self):
+        testName = 'Binary_Test2'
+        testInputBinary = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '.exe')
+        testOutputFile = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '-Output')
+        actualTestOutputFile = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '-Output.txt')
+        expectedOutputFile = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '-Expected_Output.txt')
+
+        try:
+            self.assertFalse(os.path.exists(testOutputFile)) # Ensure it doesn't already exist
+            self.assertTrue(os.path.exists(expectedOutputFile)) # Ensure it exists
+            result = execute_this_binary(testInputBinary, testOutputFile)
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised an exception')
+        else:
+            self.assertFalse(os.path.exists(testOutputFile)) # Should not exist because it doesn't include the file extension
+            self.assertTrue(os.path.exists(actualTestOutputFile)) # Ensure it exists
+            self.assertTrue(os.path.isfile(actualTestOutputFile)) # Ensure it is a file
+            self.assertTrue(result == actualTestOutputFile) # Ensure the result is as expected
+            # Test the file contents of testOutputFile against the contents of expectedOutputFile
+            ## Read the function output
+            with open(actualTestOutputFile, 'r') as fileToTest:
+                testResults = fileToTest.read()
+            ## Read the expected output
+            with open(expectedOutputFile, 'r') as expectedFile:
+                expectedResults = expectedFile.read()
+            ## Verify that the function output contains the expected output (at the very least)
+            self.assertTrue(testResults.find(expectedResults) >= 0)
+        finally:
+            # Clean up
+            if os.path.exists(testOutputFile) is True and os.path.isfile(testOutputFile) is True:
+                os.remove(testOutputFile)
+
+            if os.path.exists(actualTestOutputFile) is True and os.path.isfile(actualTestOutputFile) is True:
+                os.remove(actualTestOutputFile)
+
+#   Test 10 - execute_this_binary() 
+#       - Standard input but there's an existing output file of the same name
+#       - Expectation is the return value:
+#           -- contains the file
+#           -- has been appended with a date time stamp
+    def test10_function_Test3(self):
+        # abs prefix means "Absolute" as in "Absolute path" or "Absolute filename"
+        # rel prefix means "Relative" as in "Relative filename"... (see: filename without a path)
+        testName = 'Binary_Test3'
+        absTestInputBinary = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '.exe')
+        absTestOutputFilename = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '-Output')
+        absActualTestOutputFilename = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '-Output.txt')
+        absExpectedOutputFilename = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '-Expected_Output.txt')
+        absCurrentWorkingDirectory = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName)
+        relTestOutputFilename = testName + '-Output' # File extension left off to aid in .find() validation
+
+        # Files *absolutely* necessary to the successful completion of this test
+        keepTheseFiles = [absTestInputBinary, absActualTestOutputFilename, absExpectedOutputFilename]
+
+        # Files created by this test that *must* be removed after test completion
+        removeTheseFiles = [absTestOutputFilename]
+
+        # Verify all the *absolutely* necessary files are present
+        for file in keepTheseFiles:
+            self.assertTrue(os.path.isfile(file))
+
+        try:
+            # Verify test files were not leftover from last test run
+            for file in removeTheseFiles:
+                if os.path.isfile(file) is True:
+                    os.remove(file)
+
+            # Take a time hack
+            testStartTime = datetime.now()
+
+            # Run the actual test
+            result = execute_this_binary(absTestInputBinary, absTestOutputFilename)
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised an exception')
+        else:
+            if os.path.exists(result) is True:
+                if os.path.isfile(result) is True:
+                    # First - Test the file contents of the 'result' file against the contents of expectedOutputFile
+                    ## Read the function output
+                    with open(result, 'r') as fileToTest:
+                        testResults = fileToTest.read()
+                    ## Read the expected output
+                    with open(absExpectedOutputFilename, 'r') as expectedFile:
+                        expectedResults = expectedFile.read()
+                    ## Verify that the function output contains the expected output (at the very least)
+                    self.assertTrue(testResults.find(expectedResults) >= 0)
+
+                    # Second - Verify that absTestOutputFilename + '-' is at the beginning of the absolute filename contained in result
+                    self.assertTrue(result.find(absTestOutputFilename + '-') == 0)
+
+                    # Third - Validate the length of the filename
+                    ## Filename should be of appropriate length (which is baseFilename.len + timeStamp.len + fileExtension.len)
+                    self.assertTrue(result.__len__() == ((os.path.join(absCurrentWorkingDirectory, relTestOutputFilename)).__len__() + '-YYYYMMDD-HHMMSS.txt'.__len__()))
+
+                    # Fourth - Test the timestamp of the 'result' file against testStartTime
+                    ## Filename format (with timestamp): Test-Output-20170117-152755.txt
+                    ## Slice off the file extension because we've already verified it exists
+                    currentCandidate = result
+                    currentCandidate = currentCandidate[:currentCandidate.__len__() - '.txt'.__len__()]
+                        
+                    ## Split the filename by dashes
+                    currentCandidateList = currentCandidate.split('-') 
+                    ## If currentCandidateList has n elements...
+                    ## currentCandidateList[n - 2] == YYYYMMDD
+                    ## currentCandidateList[n - 1] == HHMMSS
+
+                    ## Get the file date (should be an exact match)
+                    fileYear = currentCandidateList[currentCandidateList.__len__() - 2]
+                    fileYear = int(fileYear[:4])
+                    fileMonth = currentCandidateList[currentCandidateList.__len__() - 2]
+                    fileMonth = int(fileMonth[4:6])
+                    fileDay = currentCandidateList[currentCandidateList.__len__() - 2]
+                    fileDay = int(fileDay[6:])
+
+                    ## Get the file time (should be very close)
+                    fileHour = currentCandidateList[currentCandidateList.__len__() - 1]
+                    fileHour = int(fileHour[:2])
+                    fileMinute = currentCandidateList[currentCandidateList.__len__() - 1]
+                    fileMinute = int(fileMinute[2:4])
+                    fileSecond = currentCandidateList[currentCandidateList.__len__() - 1]
+                    fileSecond = int(fileSecond[4:])
+    
+                    ## Construct a datetime object from the datetime stamp read from the filename
+                    testDateTimeStamp = datetime(fileYear, fileMonth, fileDay, fileHour, fileMinute, fileSecond)
+
+                    ## Compare the difference between the testStartTime and testDateTimeStamp vs MAX_SECONDS_TO_PROCESS
+                    executionDelta = testDateTimeStamp - testStartTime
+                    self.assertTrue(executionDelta.total_seconds() <= MAX_SECONDS_TO_PROCESS)
+                else:
+                    self.fail('Return value is not a file')
+            else:
+                self.fail('Return value does not exist')
+        finally:
+            # Clean up
+            for file in removeTheseFiles:
+                if os.path.isfile(file):
+                    os.remove(file)
+
+            if os.path.exists(result):
+                if os.path.isfile(result):
+                    os.remove(result)
+
+#   Test 11 - execute_this_binary() 
+#       - Standard input but there's an existing output file of the same name, complete with time-hack
+#       - Expectation is the return value:
+#           -- contains the file
+#           -- has been appended with a date time stamp
+    def test11_function_Test4(self):
+        # abs prefix means "Absolute" as in "Absolute path" or "Absolute filename"
+        # rel prefix means "Relative" as in "Relative filename"... (see: filename without a path)
+        testName = 'Binary_Test4'
+        absTestInputBinary = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '.exe')
+        absTestOutputFilename = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '-Output')
+        absActualTestOutputFilename = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '-Output.txt')
+        absExpectedOutputFilename = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '-Expected_Output.txt')
+        absCurrentWorkingDirectory = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName)
+        relTestOutputFilename = testName + '-Output' # File extension left off to aid in .find() validation
+
+        # Files *absolutely* necessary to the successful completion of this test
+        keepTheseFiles = [
+            absTestInputBinary, 
+            absActualTestOutputFilename, 
+            absExpectedOutputFilename, 
+            os.path.join(absCurrentWorkingDirectory, 'Binary_Test4-Output-20170118-134139.txt')
+        ]
+
+        # Files created by this test that *must* be removed after test completion
+        removeTheseFiles = [absTestOutputFilename]
+
+        # Verify all the *absolutely* necessary files are present
+        for file in keepTheseFiles:
+            self.assertTrue(os.path.isfile(file))
+
+        try:
+            # Verify test files were not leftover from last test run
+            for file in removeTheseFiles:
+                if os.path.isfile(file) is True:
+                    os.remove(file)
+
+            # Take a time hack
+            testStartTime = datetime.now()
+
+            # Run the actual test
+            result = execute_this_binary(absTestInputBinary, absTestOutputFilename)
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised an exception')
+        else:
+            if os.path.exists(result) is True:
+                if os.path.isfile(result) is True:
+                    # First - Test the file contents of the 'result' file against the contents of expectedOutputFile
+                    ## Read the function output
+                    with open(result, 'r') as fileToTest:
+                        testResults = fileToTest.read()
+                    ## Read the expected output
+                    with open(absExpectedOutputFilename, 'r') as expectedFile:
+                        expectedResults = expectedFile.read()
+                    ## Verify that the function output contains the expected output (at the very least)
+                    self.assertTrue(testResults.find(expectedResults) >= 0)
+
+                    # Second - Verify that absTestOutputFilename + '-' is at the beginning of the absolute filename contained in result
+                    self.assertTrue(result.find(absTestOutputFilename + '-') == 0)
+
+                    # Third - Validate the length of the filename
+                    ## Filename should be of appropriate length (which is baseFilename.len + timeStamp.len + fileExtension.len)
+                    self.assertTrue(result.__len__() == ((os.path.join(absCurrentWorkingDirectory, relTestOutputFilename)).__len__() + '-YYYYMMDD-HHMMSS.txt'.__len__()))
+
+                    # Fourth - Test the timestamp of the 'result' file against testStartTime
+                    ## Filename format (with timestamp): Test-Output-20170117-152755.txt
+                    ## Slice off the file extension because we've already verified it exists
+                    currentCandidate = result
+                    currentCandidate = currentCandidate[:currentCandidate.__len__() - '.txt'.__len__()]
+                        
+                    ## Split the filename by dashes
+                    currentCandidateList = currentCandidate.split('-') 
+                    ## If currentCandidateList has n elements...
+                    ## currentCandidateList[n - 2] == YYYYMMDD
+                    ## currentCandidateList[n - 1] == HHMMSS
+
+                    ## Get the file date (should be an exact match)
+                    fileYear = currentCandidateList[currentCandidateList.__len__() - 2]
+                    fileYear = int(fileYear[:4])
+                    fileMonth = currentCandidateList[currentCandidateList.__len__() - 2]
+                    fileMonth = int(fileMonth[4:6])
+                    fileDay = currentCandidateList[currentCandidateList.__len__() - 2]
+                    fileDay = int(fileDay[6:])
+
+                    ## Get the file time (should be very close)
+                    fileHour = currentCandidateList[currentCandidateList.__len__() - 1]
+                    fileHour = int(fileHour[:2])
+                    fileMinute = currentCandidateList[currentCandidateList.__len__() - 1]
+                    fileMinute = int(fileMinute[2:4])
+                    fileSecond = currentCandidateList[currentCandidateList.__len__() - 1]
+                    fileSecond = int(fileSecond[4:])
+    
+                    ## Construct a datetime object from the datetime stamp read from the filename
+                    testDateTimeStamp = datetime(fileYear, fileMonth, fileDay, fileHour, fileMinute, fileSecond)
+
+                    ## Compare the difference between the testStartTime and testDateTimeStamp vs MAX_SECONDS_TO_PROCESS
+                    executionDelta = testDateTimeStamp - testStartTime
+                    self.assertTrue(executionDelta.total_seconds() <= MAX_SECONDS_TO_PROCESS)
+                else:
+                    self.fail('Return value is not a file')
+            else:
+                self.fail('Return value does not exist')
+        finally:
+            # Clean up
+            for file in removeTheseFiles:
+                if os.path.isfile(file):
+                    os.remove(file)
+
+            if os.path.exists(result):
+                if os.path.isfile(result):
+                    os.remove(result)
+
+#   Test 12 - execute_this_binary() 
+#       - Standard input but there's two existing output files of the same 'base' name, complete with time-hacks
+#       - Expectation is the return value contains the file but no date time stamp has been appended
+    def test12_function_Test5(self):
+        # abs prefix means "Absolute" as in "Absolute path" or "Absolute filename"
+        # rel prefix means "Relative" as in "Relative filename"... (see: filename without a path)
+        testName = 'Binary_Test5'
+        absTestInputBinary = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '.exe')
+        absTestOutputFilename = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '-Output')
+        absActualTestOutputFilename = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '-Output.txt')
+        absExpectedOutputFilename = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName, testName + '-Expected_Output.txt')
+        absCurrentWorkingDirectory = os.path.join(os.getcwd(), 'Tester_Function_Test_Files', testName)
+        relTestOutputFilename = testName + '-Output' # File extension left off to aid in .find() validation
+
+        # Files *absolutely* necessary to the successful completion of this test
+        keepTheseFiles = [
+            absTestInputBinary, 
+            absExpectedOutputFilename, 
+            os.path.join(absCurrentWorkingDirectory, 'Binary_Test5-Output-20170118-134139.txt'), 
+            os.path.join(absCurrentWorkingDirectory, 'Binary_Test5-Output-20170118-135553.txt')
+        ]
+
+        # Files created by this test that *must* be removed after test completion
+        removeTheseFiles = [absTestOutputFilename, absActualTestOutputFilename]
+
+        # Verify all the *absolutely* necessary files are present
+        for file in keepTheseFiles:
+            self.assertTrue(os.path.isfile(file))
+
+        try:
+            # Verify test files were not leftover from last test run
+            for file in removeTheseFiles:
+                if os.path.isfile(file) is True:
+                    os.remove(file)
+
+            # Take a time hack
+            testStartTime = datetime.now()
+
+            # Run the actual test
+            result = execute_this_binary(absTestInputBinary, absTestOutputFilename)
+        except Exception as err:
+            print(repr(err))
+            self.fail('Raised an exception')
+        else:
+            if os.path.exists(result) is True:
+                if os.path.isfile(result) is True:
+                    # First - Test the file contents of the 'result' file against the contents of expectedOutputFile
+                    ## Read the function output
+                    with open(result, 'r') as fileToTest:
+                        testResults = fileToTest.read()
+                    ## Read the expected output
+                    with open(absExpectedOutputFilename, 'r') as expectedFile:
+                        expectedResults = expectedFile.read()
+                    ## Verify that the function output contains the expected output (at the very least)
+                    self.assertTrue(testResults.find(expectedResults) >= 0)
+
+                    # Second - Verify that absTestOutputFilename is the same as the return value
+                    self.assertTrue(result == absActualTestOutputFilename)
+                else:
+                    self.fail('Return value is not a file')
+            else:
+                self.fail('Return value does not exist')
+        finally:
+            # Clean up
+            for file in removeTheseFiles:
+                if os.path.isfile(file):
+                    os.remove(file)
+
+            if os.path.exists(result):
+                if os.path.isfile(result):
+                    os.remove(result)
 
 if __name__ == '__main__':
     # Necessary test files (doesn't matter if they're empty, they merely need to exist)

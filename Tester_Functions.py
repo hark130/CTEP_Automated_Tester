@@ -1,8 +1,8 @@
 # 1. [X] Determine files present  
-# 2. [X] Compile source code into object code  
+# 2. [X] Assemble source code into object code  
 # 3. [X] Link existing object code into a binary executable  
-# 4. [ ] Execute the binary  
-# 5. [ ] Save the output of the execution into a file  
+# 4. [/] Execute the binary  
+# 5. [/] Save the output of the execution into a file  
 
 import os
 import subprocess
@@ -79,7 +79,7 @@ def create_file_list(dir, fileExt):
     return cflRetVal
 
 
-# 2. Compile source code into object code
+# 2. Assemble source code into object code
 '''
     Purpose: Return a list of object files that have been assembled from any file extension matches (see: fileExt) matches in directory 'dir'
     Input:
@@ -410,12 +410,24 @@ def link_objects_to_binary(dir, objFiles):
             Return value is not guaranteed to match absOutputFilename! (this is to preserve existing log files)
 '''
 # 4. Execute the binary
+# 5. Save the output of the execution into a file
 def execute_this_binary(absExeFilename, absOutputFilename=''):
     ebRetVal = absOutputFilename # Variable to hold the functions return value (see: output file)
     addTimestamp = False # Does ebRetVal require a timestamp?  Default, no.
     createOutputFilename = False # Was absOutputFilename blank?  If so, create a filename.  Default, no.
     bareBinaryName = '' # Stores the name of the executable without path or file extension
     dateTimeStamp = '' # Will store the date-time stamp if necessary (format: YYYYMMDD-HHMMSS)
+
+    cmdAbsFilename = 'C:\\Windows\\SysWOW64\\cmd.exe' # Location of cmd.exe
+    cmdAbsCommand = cmdAbsFilename + '\n\n' # Preperatory command to send to a subprocess
+
+
+    # 0. OPERATING SYSTEM VERIFICATION
+    if os.path.exists(cmdAbsFilename) is False:
+        raise FileNotFoundError('cmd.exe not found')
+    else:
+#        print("Found {}".format(cmdAbsFilename)) # DEBUGGING
+        pass
 
     # 1. INPUT VALIDATION
     ## 1.1. absExeFilename
@@ -433,7 +445,9 @@ def execute_this_binary(absExeFilename, absOutputFilename=''):
         raise ValueError('absExeFilename is not a file')
     ### 1.1.5. Verify absExeFilename ends in .exe
     elif absExeFilename.find('.exe') != (absExeFilename.__len__() - '.exe'.__len__()):
-        raise ValueError('absExeFilename is not named properly')  
+        raise ValueError('absExeFilename is not named properly')
+    else:
+        binaryAbsCommand = '"' + absExeFilename + '"' + '\n\n' # Preperatory command to send to a subprocess
 
     ## 1.2. absOutputFilename
     ### 1.2.1. Verify absOutputFilename is a string
@@ -444,64 +458,136 @@ def execute_this_binary(absExeFilename, absOutputFilename=''):
         createOutputFilename = True
         addTimestamp = True
         ebRetVal = os.getcwd()
-    ### 1.2.3. Check if absOutputFilename already exists
-    elif os.path.exists(absOutputFilename) is True:
+
+    ### 1.2.3. Add a file extension if it's missing from absOutputFilename
+    if createOutputFilename is False:
+        #### 1.2.3.1. Split the intended output name
+        outputFilenameList = absOutputFilename.split('\\')
+        #### 1.2.3.2. Check the relative filename for a file extension
+        bareFilename = outputFilenameList[outputFilenameList.__len__() - 1]
+        if bareFilename.find('.') > 0:
+            bareFilename = bareFilename[:bareFilename.find('.')]
+        #### 1.2.3.3. Add a .txt file extension
+        outputFilenameList[outputFilenameList.__len__() - 1] = bareFilename + '.txt'
+        #### 1.2.3.4. Reassemble the absolute filename for the output file
+        absOutputFilename = '\\'.join(outputFilenameList)
+
+    ### 1.2.4. Check if absOutputFilename already exists
+    if os.path.exists(absOutputFilename) is True:
         if os.path.isfile(absOutputFilename) is True:
             addTimestamp = True
         else:
             raise ValueError('absOutputFilename is not a file')
 
+    ebRetVal = absOutputFilename # Variable to hold the functions return value (see: output file)
 
-
-    # N. CREATE DATE-TIME STAMP
+    # 2. CREATE DATE-TIME STAMP
     if addTimestamp is True:
         ## N.1.1. Get today's date time
         rightNow = datetime.now()
 
-        ## N.1.2. Parse today's date time into dateTimeStamp
+        ## 2.1.2. Parse today's date time into dateTimeStamp
         dateTimeStamp = rightNow.strftime("%Y%m%d") + '-' + rightNow.strftime("%H%M%S")
 
-        print("Date Stamp:\t{}".format(dateTimeStamp)) # DEBUGGING
+#        print("Date Stamp:\t{}".format(dateTimeStamp)) # DEBUGGING
 
-    # O. CREATE OUTPUT FILENAME
-    ## O.1. Get the binary name
-    ### O.1.1. Split the absolute filename
+
+    # 3. CREATE OUTPUT FILENAME
+    ## 3.1. Get the binary name
+    ### 3.1.1. Split the absolute filename
     bareBinaryName = absExeFilename.split('\\')
 
-    ### O.1.2. Get the name of the binary
+    ### 3.1.2. Get the name of the binary
     bareBinaryName = bareBinaryName[bareBinaryName.__len__() - 1]
 
-    ### O.1.3. Strip the file extension
+    ### 3.1.3. Strip the file extension
     if bareBinaryName.find('.') > 0:
         bareBinaryName = bareBinaryName[:bareBinaryName.find('.')]
 
-    ## O.2. Create output filename
+    ## 3.2. Create output filename
     if createOutputFilename is True:
-        ### O.2.1. Prepend
+        ### 3.2.1. Prepend
         ebRetVal = os.path.join(os.getcwd(), bareBinaryName + '-Output')
-        ### O.2.2. Add dateTimeStamp if it exists (and it should)
+        ### 3.2.2. Add dateTimeStamp if it exists (and it should)
         if dateTimeStamp.__len__() == 15:
             ebRetVal = ebRetVal + '-' + dateTimeStamp
-        ### O.2.3. Add file extension
+        ### 3.2.3. Add file extension
         ebRetVal = ebRetVal + '.txt'
-    ## O.3. Check if a timestamp is called for
+    ## 3.3. Check if a timestamp is called for
     else:
         if addTimestamp is True and dateTimeStamp.__len__() == 15:
-            ### O.3.1. Split the absolute output filename
+            ### 3.3.1. Split the absolute output filename
             absOutputFilenameList = absOutputFilename.split('\\')
 
-            ### O.3.2. Remove the file extension
+            ### 3.3.2. Remove the file extension
             outputFilename = absOutputFilenameList[absOutputFilenameList.__len__() - 1]
             if outputFilename.find('.') > 0:
                 outputFilename = outputFilename[:outputFilename.find('.')]
             absOutputFilenameList[absOutputFilenameList.__len__() - 1] = outputFilename
 
-            ### O.3.3. Change the name of the file by appending the dateTimeStamp
+            ### 3.3.3. Change the name of the file by appending the dateTimeStamp
             absOutputFilenameList[absOutputFilenameList.__len__() - 1] = absOutputFilenameList[absOutputFilenameList.__len__() - 1] + '-' + dateTimeStamp + '.txt'
 
-            ### O.3.4. Put it all back together again
+            ### 3.3.4. Put it all back together again
             ebRetVal = '\\'.join(absOutputFilenameList)
 
+
+    # 4. OPEN THE FILE
+    try:
+        outFile = open(ebRetVal, 'w')
+    except Exception as err:
+        print(repr(err))
+    else:
+#        print("\nSuccessfully opened file\n{}".format(ebRetVal)) # DEBUGGING
+        pass
+
+
+    # 5. INVOKE THE BINARY
+    ## 5.1. Invoke cmd.exe
+    try:
+        cmdDevPromptProcess = subprocess.Popen([cmdAbsCommand], stdin=subprocess.PIPE, stdout=outFile, shell=True)
+    except Exception as err:
+        print(repr(err))
+    else:
+#        print("\nCommand Prompt Started") # DEBUGGING
+        pass
+
+    ## 5.2. Invoke binary through cmd.exe
+    try:
+        cmdDevPromptProcess.stdin.write(binaryAbsCommand.encode())
+#            cmdDevPromptProcess.stdin.close() # DEBUGGING
+    except Exception as err:
+        print(repr(err))
+    else:
+#        print("\nBinary Executable Started") # DEBUGGING
+        pass   
+
+
+    # 6. END THE PROCESS
+    try:
+        ## 6.1. Close the stream
+        cmdDevPromptProcess.stdin.close()
+
+        ## 6.2. Now that the stream is closed, wait for all the commands to finish
+        while cmdDevPromptProcess.poll() is None:
+            sleep(5)
+
+        cmdDevPromptProcess.terminate()
+    except Exception as err:
+        print(repr(err))
+    else:
+#        print("The Process Has Ended") # DEBUGGING
+        pass
+
+
+    # 7. CLOSE THE FILE
+    try:
+        outFile.close()
+    except Exception as err:
+        print(repr(err))
+    else:
+#        print("\nSuccessfully closed file\n{}".format(ebRetVal)) # DEBUGGING
+        pass
 
 
     return ebRetVal
