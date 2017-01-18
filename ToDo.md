@@ -2,8 +2,12 @@
 - [X] Determine files present  
 - [X] Compile source code into object code  
 - [X] Link existing object code into a binary executable  
-- [ ] Execute the binary  
-- [ ] Save the output of the execution into a file  
+- [X] Execute the binary  
+- [X] Save the output of the execution into a file
+- [ ] Refactor the entire process so that one log file is used to store the stdout and stderr for:
+	- [ ] compile_source_to_object()
+	- [ ] link_objects_to_binary()
+	- [ ] execute_this_binary()
     
 ## FUTURE ##
 - [ ] Build a bank of tests that test the module from start to finish
@@ -15,4 +19,9 @@
     - [ ] If an old .obj is found, (store? and...) verify it was newly created
 - [ ] execute_this_binary() in Tester_Functions.py
 	- [ ] Add a safety check to prevent exceeding max filesize of 255
-    
+- [ ] Consider the possibility that Popen() output could be redirected to a websocket instead of a file.
+		This may aid in communication between the back-end Windows machine (see: compiler) and the CTEP
+		front end (see: IDE)
+- [ ] Consider modifying execute_this_binary() to take binary arguments as a function argument.    
+		Example: execute_this_binary('toupper.exe', 'string', 'output.txt') executes 'toupper.exe string'
+			and saves the output to 'output.txt'.

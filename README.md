@@ -6,8 +6,8 @@ The current CTEP framework can not evaluate code submissions intended for the Wi
 - [X] Discover necessary files  
 - [X] Assemble source code  
 - [X] Link object code to a binary  
-- [ ] Run that binary  
-- [ ] Save the output of the binary into a file  
+- [X] Run that binary  
+- [X] Save the output of the binary into a file  
     
 This project assumes that some other effort will deliver the necessary files from the student to this machine.
 This project also assumes that some other effort will deliver the output from this machine to the student.
